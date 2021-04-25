@@ -1,4 +1,4 @@
-# Raspberry Pi 3 B/B+ Vertcoin full node installation done using Windows
+# Raspberry Pi 4 Vertcoin full node installation done using Windows
 
 <p align="center">
   <img src="https://i.imgur.com/eJyg30C.png" width="343" height="68" />
@@ -14,22 +14,24 @@
 
 `NOTE:` This will be a “headless” server... meaning we will not be using a GUI to configure Vertcoin or check to see how things are running. In fact, once the server is set up, you will only interact with it using command line calls over `SSH`. The idea is to have this full node be simple, low-power, with optimized memory usage and something that “just runs” in your basement, closet, etc.
 
-#### Why a Raspberry Pi?
->Raspberry Pi is an inexpensive computing hardware platform that generates little heat, draws little power, and can run silently 24 hours a day without having to think about it. [1]
+#### Why a Raspberry Pi 4?
+>Raspberry Pi is an inexpensive computing hardware platform that generates little heat, draws little power, and can run silently 24 hours a day without having to think about it. A minimum of 2GB RAM is required to load verthash into memory for Vertcoin-Core. A minimum of 4GB RAM is required if you wish to additionally run P2Pool. [1]
+
+#### Automated installation using Vertnode
+>[Vertnode](https://github.com/vertiond/vertnode) is an automated installation script for Vertcoin-Core and additionally P2Pool. Using this script, you may choose to build Vertcoin-Core from source.
 
 #### Index
 1. `Parts List`
 2. `Download and Sync Vertcoin Core QT *`
-3. `Install Raspbian Stretch Lite`
+3. `Install Raspberry Pi OS Lite`
 4. `Initial Setup of Raspberry Pi`
 5. `Format USB Flash Drive and Configure Auto-Mount`
-6. `Transfer Blockchain to USB Flash Drive, Create vertcoin.conf & Soft Link to USB Flash Drive`
+6. `Transfer Blocks and verthash.dat to USB Flash Drive, Create vertcoin.conf & Soft Link to USB Flash Drive`
 7. `Create Swap File space for Raspberry Pi & Start Syncing`
 8. `Configure firewall to allow Vertcoin Core traffic`  
 9. `Congratulations! Thanks for doing your part and running a Vertcoin full node <3`
 
-`*OPTIONAL Setup p2pool-vtc`  
-`**EXPERIMENTAL Setup Unitus Full Node for merged mining with p2pool-vtc`   
+`*OPTIONAL Setup p2pool-vtc`
 
 -----------------------------------------
 
@@ -37,16 +39,16 @@
 
 | Parts                                                        | Price      | Link                                                                            |
 |--------------------------------------------------------------|------------|---------------------------------------------------------------------------------|
-| CanaKit Raspberry Pi 3 B+                                    | $49.99 USD | https://www.amazon.com/CanaKit-Raspberry-Power-Supply-Listed/dp/B07BC6WH7V/     |
-| Samsung 32GB 95MB/s (U1) MicroSD EVO Select Memory Card      | $12.99 USD | https://www.amazon.com/Samsung-MicroSD-Adapter-MB-ME32GA-AM/dp/B06XWN9Q99/      |
-| SanDisk Ultra Fit 128GB USB 3.0 Flash Drive                  | $27.49 USD | https://www.amazon.com/SanDisk-Ultra-128GB-Flash-Drive/dp/B01BGTG2A0/           |
-| Transcend USB 3.0 SDHC / SDXC / microSDHC / SDXC Card Reader | $9.23 USD  | https://www.amazon.com/Transcend-microSDHC-Reader-TS-RDF5K-Black/dp/B009D79VH4/ |
-| *OPTIONAL: Zebra Black Ice Case for Raspberry Pi by C4Labs   | $14.95 USD | https://www.amazon.com/Zebra-Black-Case-Raspberry-C4labs/dp/B00M6G9YBM/         |
+| CanaKit Raspberry Pi 4 Basic Kit (2GB, 4GB, 8GB RAM)         | $55-$90 USD| https://www.amazon.com/CanaKit-Raspberry-Basic-Kit-8GB/dp/B07TYK4RL8/           |
+| Samsung 32GB 95MB/s (U1) MicroSD EVO Select Memory Card      | $7.49 USD  | https://www.amazon.com/Samsung-MicroSD-Adapter-MB-ME32GA-AM/dp/B06XWN9Q99/      |
+| SanDisk Ultra Fit 128GB USB 3.1 Flash Drive                  | $16.95 USD | https://www.amazon.com/SanDisk-128GB-Ultra-Flash-Drive/dp/B07855LJ99            |
+| Transcend USB 3.0 SDHC / SDXC / microSDHC / SDXC Card Reader | $9.95 USD  | https://www.amazon.com/Transcend-microSDHC-Reader-TS-RDF5K-Black/dp/B009D79VH4/ |
+| *OPTIONAL: iUniker ABS Case with Cooling Fan                 | $10.99 USD | https://www.amazon.com/iUniker-Raspberry-Aluminium-Heatsink-Supply/dp/B07D3S4KBK|
 
 
 You may change the USB Flash Drive to match your preference. I `highly recommend` that a USB Flash Drive (16GB - 128GB) or an External Hard Drive is paired with the Raspberry Pi. 
 
-The case in the parts list is a personal preference, it is your choice how you wish to protect your Raspberry Pi. The Zebra Black Ice case was chosen for it's cut out on the bottom of the case, allowing for the placement of a heatsink on the `RAM` of the Raspberry Pi. 
+The case in the parts list is a personal preference; it is your choice how you wish to protect your Raspberry Pi. The iUniker ABS case was chosen for its external fan that is quiet and provides effective cooling capabilities. 
 
 -----------------------------------------
 
@@ -59,39 +61,26 @@ We will use this copy of the blockchain that is syncing to side-load onto our Ra
 `Vertcoin Core Download Link: https://github.com/vertcoin-project/vertcoin-core/releases`  
 `Default Windows Directory (Vertcoin): C:\Users\%USER%\AppData\Roaming\Vertcoin`  
 
-`NOTE:` Setting up merged mining with `Unitus` has proven to be an unstable experience so far, this section is experimental and is only for those who wish to experiment with their Raspberry Pi and are comfortable with troubleshooting their node and possibly breaking their node. 
-
-If you intend on merge mining with `Unitus`, consider syncing `Unitus Core` now as well.
-
-`Unitus Core Download Link: https://github.com/unitusdev/unitus/releases`  
-`Default Windows Directory (Unitus): C:\Users\%USERS%\AppData\Roaming\Unitus`  
-
 -----------------------------------------
 
-### 3.) Install Raspbian Stretch Lite
+### 3.) Install Raspberry Pi OS Lite
 
->Raspbian is a free operating system based on Debian, optimised for the Raspberry Pi hardware. Raspbian comes with over 35,000 packages: precompiled software bundled in a nice format for easy installation on your Raspberry Pi.
+>Raspberry Pi OS is a free operating system based on Debian, optimised for the Raspberry Pi hardware. Raspberry Pi OS comes with over 35,000 packages: precompiled software bundled in a nice format for easy installation on your Raspberry Pi.
 > 
 >`https://www.raspberrypi.org/documentation/raspbian/`
 
-I recommend downloading the latest stable version of [Raspbian Stretch Lite](https://www.raspberrypi.org/downloads/raspbian/). 
+I recommend downloading the latest stable version of [Raspberry Pi OS Lite](https://www.raspberrypi.org/software/operating-systems/). 
 
-We will utilize the software 'Win32 Disk Imager' to format and install Raspbian on the MicroSD card. Please follow the [guide](https://www.raspberrypi.org/documentation/installation/installing-images/windows.md) below for details on installing the Rasbian image to the MicroSD card.
-
-![Write](https://i.imgur.com/fTyqpat.png)  
-![Writing...](https://i.imgur.com/DrGi0mb.png)  
-![Done](https://i.imgur.com/cfUjvKR.png)
+We will utilize the software [Raspbery Pi Imager](https://www.raspberrypi.org/software/) to format and install Raspbian on the MicroSD card. Please follow the [guide](https://www.raspberrypi.org/documentation/installation/installing-images/README.md) for details on installing the image to your MicroSD card.
 
 `Raspberry Pi - Installing Operating System Images Using Windows: https://www.raspberrypi.org/documentation/installation/installing-images/windows.md`
 
-Once Win32 Disk Imager is finished writing to the MicroSD card please access the 'boot' partition of the MicroSD card with Windows Explorer `Win+E`. Create a new empty text file named `ssh` like so...
+Once Raspberry Pi Imager is finished writing to the MicroSD card please access the 'boot' partition of the MicroSD card with Windows Explorer `Win+E`. Create a new empty text file named `ssh` like so...
 
 ![MicroSD card - ssh](https://i.imgur.com/m14rGdV.png)  
 This enables `SSH` access on the Raspberry Pi's first boot sequence. Please safely remove the USB Card Reader / MicroSD card as to ensure the data is not corrupted.
 
-`Raspian Download Link: https://www.raspberrypi.org/downloads/raspbian/`  
-
-`Win32 Disk Imager Documentation: https://www.raspberrypi.org/documentation/installation/installing-images/windows.md`
+`Raspberry Pi OS Lite Download Link: https://www.raspberrypi.org/software/operating-systems/`
 
 -----------------------------------------
 
@@ -124,13 +113,6 @@ Open a web browser page and navigate to your router page and identify the `IP` a
 ```
 Fail2ban Documentation: https://www.digitalocean.com/community/tutorials/how-fail2ban-works-to-protect-services-on-a-linux-server`
 ```
-
-\# Install `bitcoin` dependencies 
-```
-Bitcoin Unix Build Notes: https://github.com/bitcoin/bitcoin/blob/master/doc/build-unix.md
-```  
-`pi@raspberrypi:~ $ sudo apt-get install build-essential libtool autotools-dev automake pkg-config libssl-dev libevent-dev bsdmainutils python3 -y`  
-
 
 \# Initiate `raspi-config` script  
 `pi@raspberrypi:~ $ sudo raspi-config`
@@ -173,21 +155,18 @@ pi@raspberrypi:/etc/modprobe.d $ cd
 # NOTE: Changes will not take effect until after reboot.
 ```
 \# Download latest stable version of vertcoin-core for `ARM` architecture to Raspberry Pi  
-`pi@raspberrypi:~ $ wget https://github.com/vertcoin-project/vertcoin-core/releases/download/0.14.0/vertcoind-v0.14.0-linux-armhf.zip`  
+`pi@raspberrypi:~ $ wget https://github.com/vertcoin-project/vertcoin-core/releases/download/0.17.1/vertcoin-qt-v0.17.1-arm-linux-gnueabihf.zip`  
 
-\# Unzip `vertcoind-v0.14.0-linux-armhf.zip`  
+\# Unzip `vertcoin-qt-v0.17.1-arm-linux-gnueabihf.zip`  
 ```
-pi@raspberrypi:~ $ unzip vertcoind-v0.14.0-linux-armhf.zip
-Archive:  vertcoind-v0.14.0-linux-armhf.zip
+pi@raspberrypi:~ $ unzip vertcoin-qt-v0.17.1-arm-linux-gnueabihf.zip
+Archive:  vertcoin-qt-v0.17.1-arm-linux-gnueabihf.zip
   inflating: vertcoin-cli
   inflating: vertcoind
   inflating: vertcoin-tx
 ```  
-\# Remove `vertcoind-v0.14.0-linux-armhf.zip`  
-`pi@raspberrypi:~ $ rm *.zip`  
-
-\# Give privileges to `vertcoin` binaries  
-`pi@raspberrypi:~ $ chmod +x vertcoin*`
+\# Remove `vertcoin-qt-v0.17.1-arm-linux-gnueabihf.zip`  
+`pi@raspberrypi:~ $ rm *.zip`
 
 \# Move `vertcoin-cli`, `vertcoind`, `vertcoin-tx` to `/usr/bin/`  
 `pi@raspberrypi:~ $ sudo mv vertcoin* /usr/bin/`  
@@ -196,7 +175,7 @@ Archive:  vertcoind-v0.14.0-linux-armhf.zip
 
 ### 5.) Format USB Flash Drive and configure Auto-Mount
 
->The Vertcoin blockchain is about 4GB today (4/23/2018) which means that a 16GB USB Flash Drive will have more than enough space to store everything we need, but you can easily future proof with a 128GB USB Flash Drive.  
+>The Vertcoin blockchain is over 6GB which means that a 16GB USB Flash Drive will have more than enough space to store everything we need, but you can easily future proof with a 128GB USB Flash Drive.  
 
 Insert the USB Flash Drive into your Raspberry Pi.
 
@@ -278,7 +257,7 @@ lost+found  vertcoin
 
 -----------------------------------------
 
-### 6.) Transfer Blockchain to USB Flash Drive, Create `vertcoin.conf` & Soft Link to USB Flash Drive
+### 6.) Transfer Blocks and verthash.dat to USB Flash Drive, Create `vertcoin.conf` & Soft Link to USB Flash Drive
 
 >WinSCP (Windows Secure Copy) is a free and open-source SFTP, FTP, WebDAV, Amazon S3 and SCP client for Microsoft Windows. Its main function is secure file transfer between a local and a remote computer. Beyond this, WinSCP offers basic file manager and file synchronization functionality. For secure transfers, it uses Secure Shell (SSH) and supports the SCP protocol in addition to SFTP.
 
@@ -301,7 +280,7 @@ Ensure `Optimize connection buffer size` is unchecked for an easy tansfer.
 
 `Default Windows Directory (Vertcoin): C:\Users\%USER%\AppData\Roaming\Vertcoin`  
 
-While logged into your Raspberry Pi, create a new folder named `vertcoin` on your USB Flash Drive, copy the folders `blocks` and `chainstate` to the `/mnt/vertcoin` folder on your USB Flash Drive. This will allow us to side-load the Vertcoin blockchain and bootstrap faster than if we had the Raspberry Pi do all the work. 
+While logged into your Raspberry Pi, create a new folder named `vertcoin` on your USB Flash Drive, copy the folder `blocks` and `verthash.dat` to the `/mnt/vertcoin` folder on your USB Flash Drive. This will allow us to side-load the Vertcoin blockchain and bootstrap faster than if we had the Raspberry Pi do all the work. 
 
 Consider transferring the `peers.dat` file found in Vertcoin's data directory, this can help prevent failing to connect to peers during initial bootstrapping process. 
 
@@ -312,23 +291,8 @@ Move back over to your `SSH` session with your Raspberry Pi...
 \# Change directory to `/mnt/vertcoin`  
 `pi@raspberrypi:~ $ cd /mnt/vertcoin`
 
-`NOTE:` If you plan on making your Raspberry Pi just a full node please consider leaving `maxconnections` set to 40, as the more peers you connect to, the greater amount of peers you can propagate blocks to. The network benefits greatly from peers with many connections. If you plan on setting up a P2Pool the documentation below says to set `maxconnections=15` in your `vertcoin.conf` This has been done to minimize the DOA % rate and maximize share efficency on less powerful hardware like the Raspberry Pi. 
-```
-Raspberry Pi Config: 
-# Set database cache size in megabytes; machines sync faster with a larger cache. Recommend 
-# setting as high as possible based upon machine's available RAM
-dbcache=100
-# Keep at most <n> unconnectable transactions in memory
-maxorphantx=10
-# Keep the transaction memory pool below <n> megabytes
-maxmempool=50
+`NOTE:` If you plan on making your Raspberry Pi just a full node please consider leaving `maxconnections` set to 40, as the more peers you connect to, the greater amount of peers you can propagate blocks to. The network benefits greatly from peers with many connections. If you plan on setting up a P2Pool the documentation below says to set `maxconnections=15` in your `vertcoin.conf` This has been done to minimize the DOA % rate and maximize share efficency on less powerful hardware like the Raspberry Pi.
 
-Low Bandwidth Usage Config: 
-# Maintain at most N connections to peers
-maxconnections=20  
-# Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = no limit  
-maxuploadtarget=500  
-```
 \# Create `vertcoin.conf` for Vertcoin Core  
 `pi@raspberrypi:/mnt/vertcoin $ sudo nano vertcoin.conf`
 ```
@@ -339,13 +303,13 @@ rpcpassword=yoursecurepasswordgoeshere
 # makes client run in background
 daemon=1
 
-# https://jlopp.github.io/bitcoin-core-config-generator/ lopp.net optimizations
+# Set database cache size in megabytes; machines sync faster with a larger cache. Recommend 
+# setting as high as possible based upon machine's available RAM
 dbcache=100
-maxorphantx=10
-maxmempool=50
 # leave maxconnections at 40 for full node; 15 for full node + p2pool
 maxconnections=40
-maxuploadtarget=5000
+# Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = no limit  
+maxuploadtarget=500
 ```  
 `ctrl+x` to save   
 
@@ -356,7 +320,7 @@ maxuploadtarget=5000
 
 >More than 20 for maxconnections is probably overkill. From my experience (trying various values from 6 to 100) it seems there's not much gain to have past this value (and if you don't have enough WAN bandwidth it can hurt your latencies by queuing transfers between P2Pool nodes during peaks). `[4]`
 
->Note that this may change in the future if the behavior of bitcoind/P2Pool network changes: when in doubt, monitor your interface(s) bandwidth usage and raise this value when most peaks are below your link capacity. `[4]`
+>Note that this may change in the future if the behavior of vertcoind/P2Pool network changes: when in doubt, monitor your interface(s) bandwidth usage and raise this value when most peaks are below your link capacity. `[4]`
 
 >If your orphan rate is fine, don't tempt the devil and try tuning maxconnections below 20: you may reduce your income more than you increase it... `[4]`
 
@@ -399,7 +363,7 @@ pi@raspberrypi:~ $ ls -a
 \# List files in `/home/pi/.vertcoin`, confirm blockchain and `vertcoin.conf` is there  
 ```
 pi@raspberrypi:~ $ ls .vertcoin
-blocks  chainstate  vertcoin.conf
+blocks vertcoin.conf
 ```  
 
 -----------------------------------------
@@ -512,9 +476,9 @@ Choose 1-3 [2]: 2
 \# `NOTE:` Make sure the blockchain has fully transferred to `/mnt/vertcoin` before starting `vertcoind`
 
 \# Start the `vertcoin` daemon and begin blockchain sync  
-`pi@raspberrypi:~ $ vertcoind &`  
+`pi@raspberrypi:~ $ vertcoind`  
 ```
-pi@raspberrypi:~ $ vertcoind &
+pi@raspberrypi:~ $ vertcoind
 [1] 837
 pi@raspberrypi:~ $ tailf .vertcoin/debug.log 
 2018-05-04 23:00:29 Cache configuration:
@@ -535,7 +499,7 @@ pi@raspberrypi:~ $ tailf .vertcoin/debug.log
 ### Quick note about blockchain syncing
     Vertcoin Core is now synchronizing to the side-loaded blockchain located in `/mnt/` 
     (linked to `/home/pi/.vertcoin`). This process can take up to an hour to sync 
-    headers and verify all of the downloaded blocks. Vertcoin 0.13.0 has shown major
+    headers and verify all of the downloaded blocks. Vertcoin 0.13.0+ has shown major
     improvements to loading time of the blockchain and can take as little as 
     two minutes to fully load.
     
@@ -555,9 +519,7 @@ You may continue on while `vertcoind` catches up to the blockchain ...
 
 -----------------------------------------
 
-### 8.) Configure firewall to allow Vertcoin Core traffic  
-
-Please note that your `IP` range may be different than what I have listed below. If your router `IP` address is `192.168.1.1` then the instructions above require no alterations. If your `IP` address is something like `192.168.56.1` or `10.0.0.1` then you will need to modify the 'ufw allow from `192.168.1.0/24` to any port 22' to 'ufw allow from `192.168.56.0/24`(...)' or 'ufw allow from `10.0.0.0/24`(...)' respectively. 
+### 8.) Configure firewall to allow Vertcoin Core traffic
 
 \# Install `UFW`  
 `pi@raspberrypi:~ $ sudo apt-get install ufw`  
@@ -575,7 +537,7 @@ Default incoming policy changed to 'deny'
 Default outgoing policy changed to 'allow'
 (be sure to update your rules accordingly)
 ```
-`root@raspberrypi:/home/pi# ufw allow from 192.168.1.0/24 to any port 22 comment 'allow SSH from local LAN'`  
+`root@raspberrypi:/home/pi# ufw allow ssh comment 'allow SSH from local LAN'`   
 `root@raspberrypi:/home/pi# ufw allow 5889 comment 'allow vertcoin core'`  
 `root@raspberrypi:/home/pi# ufw enable`  
 ```
@@ -593,7 +555,8 @@ Status: active
 
 To                         Action      From
 --                         ------      ----
-22                         ALLOW       192.168.1.0/24             # allow SSH from local LAN
+22/tcp                     ALLOW       Anywhere                   # allow SSH from local LAN
+22/tcp (v6)                ALLOW       Anywhere (v6)              # allow SSH from local LAN
 5889                       ALLOW       Anywhere                   # allow vertcoin core
 5889 (v6)                  ALLOW       Anywhere (v6)              # allow vertcoin core
 ```
@@ -723,24 +686,20 @@ You can do the same by passing parameters to `P2Pool`:
 
 \# Install `p2pool-vtc` dependencies and `python-pip` 
 
-`pi@raspberrypi:~ $ sudo apt-get install python-rrdtool python-pygame python-scipy python-twisted python-twisted-web python-imaging python-pip -y`  
-
-\# Install `bitcoin` dependencies and `libffi-dev` 
-
-`pi@raspberrypi:~ $ sudo apt-get install build-essential libtool autotools-dev automake pkg-config libffi-dev libssl-dev libevent-dev bsdmainutils python3 -y`
+`pi@raspberrypi:~ $ sudo apt install python-rrdtool python-pygame python-scipy python-twisted python-twisted-web python-pil python-pip libffi-dev at -y`
 
 \# Grab latest `p2pool-vtc` release  
 ```
-pi@raspberrypi:~ $ wget "https://github.com/vertcoin-project/p2pool-vtc/archive/v2.0.0.zip"  
+pi@raspberrypi:~ $ wget https://github.com/vertcoin-project/p2pool-vtc/archive/v3.0.0.zip  
 ```
 \# Unzip `p2pool-vtc` release
-`pi@raspberrypi:~ $ unzip v2.0.0.zip`  
+`pi@raspberrypi:~ $ unzip v3.0.0.zip`  
 
-\# Change directory to `p2pool-vtc-2.0.0`  
-```pi@raspberrypi:~ $ cd p2pool-vtc-2.0.0/```
+\# Change directory to `p2pool-vtc-3.0.0`  
+```pi@raspberrypi:~ $ cd p2pool-vtc-3.0.0/```
 
 \# Install `requirements.txt` dependencies  
-`pi@raspberrypi:~/p2pool-vtc-2.0.0 $ pip install -r requirements.txt`   
+`pi@raspberrypi:~/p2pool-vtc-3.0.0 $ pip install -r requirements.txt`   
 ```
 Collecting Twisted>=12.2.0 (from -r requirements.txt (line 1))
   Downloading https://files.pythonhosted.org/packages/12/2a/e9e4fb2e6b2f7a75577e0614926819a472934b0b85f205ba5d5d2add54d0/Twisted-18.4.0.tar.bz2 (3.0MB)
@@ -755,42 +714,33 @@ Collecting Automat>=0.3.0 (from Twisted>=12.2.0->-r requirements.txt (line 1))
 ```
 
 \# Install P2Pool   
-`pi@raspberrypi:~/p2pool-vtc-2.0.0 $ sudo python setup.py install`  
+`pi@raspberrypi:~/p2pool-vtc-3.0.0 $ sudo python setup.py install`  
 
 \# Download alternate  web frontend for P2Pool  
-`pi@raspberrypi:~/p2pool-vtc-2.0.0 $ cd`  
-`pi@raspberrypi:~ $ git clone https://github.com/hardcpp/P2PoolExtendedFrontEnd.git`  
+`pi@raspberrypi:~/p2pool-vtc-3.0.0 $ cd`  
+`pi@raspberrypi:~ $ git clone https://github.com/hardcpp/P2PoolExtendedFrontEnd`  
 `pi@raspberrypi:~ $ cd P2PoolExtendedFrontEnd`  
 
-\# Move all files in `P2PoolExtendedFrontEnd` to the `web-static` folder in `p2pool-vtc-2.0.0`  
-`pi@raspberrypi:~/P2PoolExtendedFrontEnd $ mv * /home/pi/p2pool-vtc-2.0.0/web-static/`  
+\# Move all files in `P2PoolExtendedFrontEnd` to the `web-static` folder in `p2pool-vtc-3.0.0`  
+`pi@raspberrypi:~/P2PoolExtendedFrontEnd $ mv * /home/pi/p2pool-vtc-3.0.0/web-static/`  
 `pi@raspberrypi:~/P2PoolExtendedFrontEnd $ cd`  
 
 \# Clean up  
 `pi@raspberrypi:~ $ sudo rm -r P2PoolExtendedFrontEnd/`
 
 
-#### Network 1 - Firewall Configuration  
-> If you are a smaller miner with 2 graphics cards or less or are using your CPU, it is recommended to use Network 2. If you are a larger miner with multiple cards and/or a hash rate larger than 100Mh, it is recommended to use Network 1.
+#### P2Pool Network - Firewall Configuration  
 
 \# Escalate to `root`  
 `pi@raspberrypi:~ $ sudo su`  
-`root@raspberrypi:/home/pi# ufw allow 9346 comment 'allow --network 1 p2p port'`  
-`root@raspberrypi:/home/pi# ufw allow 9171 comment 'allow --network 1 mining port'`  
+`root@raspberrypi:/home/pi# ufw allow 9346 comment 'allow --p2p port'`  
+
+If you wish others to be able to connect to your node, open port 9171:  
+`root@raspberrypi:/home/pi# ufw allow 9171 comment 'allow --mining port'`  
 
 \# Give up `root`  
 `root@raspberrypi:/home/pi# exit`
 
-#### Network 2 - Firewall Configuration  
-> If you are a smaller miner with 2 graphics cards or less or are using your CPU, it is recommended to use Network 2. If you are a larger miner with multiple cards and/or a hash rate larger than 100Mh, it is recommended to use Network 1.
-
-\# Escalate to `root`  
-`pi@raspberrypi:~ $ sudo su`  
-`root@raspberrypi:/home/pi# ufw allow 9347 comment 'allow --network 2 p2p port'`  
-`root@raspberrypi:/home/pi# ufw allow 9181 comment 'allow --network 2 mining port'`  
-
-\# Give up `root`  
-`root@raspberrypi:/home/pi# exit`  
 
 #### Setup P2Pool bash script for execution on reboot  
 `pi@raspberrypi:~ $ nano start-p2pool.sh`  
@@ -799,14 +749,9 @@ Collecting Automat>=0.3.0 (from Twisted>=12.2.0->-r requirements.txt (line 1))
 #
 # run p2pool with pre-configured settings
 #
-# network 1 = --net vertcoin
-# network 2 = --net vertcoin2
-#
-cd p2pool-vtc
-python run_p2pool.py --net vertcoin2 -a yourvertcoinaddressgoeshere --max-conns 8 --outgoing-conns 4
+cd p2pool-vtc-3.0.0
+python run_p2pool.py --net vertcoin -a yourvertcoinaddressgoeshere --max-conns 8 --outgoing-conns 4
 
-# !!! * EXPIRMENTAL NOTE: If you want to allow for merged mining please replace python run_p2pool.py --net vertcoin with...
-# python run_p2pool.py --net vertcoin -a yourvertcoinaddressgoeshere --merged http://unitusnode:yourreallysecureRPCpasswordhere@127.0.0.1:6699
 ```
 
 \# Give execute privileges to `start-p2pool.sh`  
@@ -847,270 +792,19 @@ python run_p2pool.py --net vertcoin2 -a yourvertcoinaddressgoeshere --max-conns 
 # sleep 2 minutes then start p2pool, allow for vertcoin blockchain to load first
 @reboot sleep 120; /home/pi/start-p2pool.sh
 ```
-`Merged Mining P2Pool Note:` Running P2Pool 10 minutes after reboot allows the Raspberry Pi resources and time to verify, load the `vertcoin` blockchain, `unitus` blockchain and catch up if needed.
 
 #### Start p2pool-vtc
 
-\# Change directories to `p2pool-vtc-2.0.0/`  
-`pi@raspberrypi:~ $ cd p2pool-vtc-2.0.0`  
+\# Symbolically link verthash.dat to P2Pool folder  
+`pi@raspberrypi:~ $ sudo ln -s /home/pi/.vertcoin/verthash.dat /home/pi/p2pool-vtc-3.0.0`
 
-> If you are a smaller miner with 2 graphics cards or less or are using your CPU, it is recommended to use Network 2. If you are a larger miner with multiple cards and/or a hash rate larger than 100Mh, it is recommended to use Network 1.
+\# Launch `p2pool`  
+`pi@raspberrypi:~ $ ./start-p2pool.sh | at now`
 
-Network 1: `--net vertcoin`     
-Network 2: `--net vertcoin2`   
-
-\# Launch `p2pool` without merged mining, ignore the hangup signal and keep running     
-`pi@raspberrypi:~/p2pool-vtc-2.0.0 $ nohup python run_p2pool.py --net vertcoin2 -a yourvertcoinaddressgoeshere --max-conns 8 --outgoing-conns 4 &`  
-
-\# Display output of P2Pool's `debug` log; `ctrl+c` to stop  
-
-Network 1:  
-`pi@raspberrypi:~ $ tailf p2pool-vtc-2.0.0/data/vertcoin/log`  
-
-Network 2:    
-`pi@raspberrypi:~ $ tailf p2pool-vtc-2.0.0/data/vertcoin2/log`
+\# Display output of P2Pool's `debug` log; `ctrl+c` to stop
+`pi@raspberrypi:~ $ tailf p2pool-vtc-3.0.0/data/vertcoin/log`
 
 -----------------------------------------
-
-### `**EXPERIMENTAL` Setup Unitus Full Node for merged mining with p2pool-vtc
-
-Unfortunately, due to the fork that happened at block 1080001, implementing the new mining algorithm Lyra2REv3, made Unitus merged-mining support impossible.
-
-`NOTE:` This has proven to be an unstable experience, this section is experimental and is only for those who wish to experimental with their Raspberry Pi and are comfortable with troubleshooting their node and possibly breaking their node. 
-
-##
-
-A `Unitus` full node may be setup to allow for merged mining rewards when mining with `p2pool-vtc`. Running two full nodes together on the same Raspberry Pi will mean that you will be storing two blockchains on your USB Flash Drive rather than one, and you will be using more resources on load and at idle. 
-
-This step is `optional` but recommended. [Download](https://github.com/unitusdev/unitus/releases) the latest stable release of Unitus Core and launch `unitus-qt.exe` on your Windows machine to begin the syncing process. I use my desktop PC to sync the blockchain first because it has better specs than a $35 Raspberry Pi. The PC will sync headers, download blocks and verify blocks faster than the Raspberry Pi can.
-
-We will use this copy of the blockchain that is syncing to side-load onto our Raspberry Pi later.
-
-\# Download latest `armhf` release of `unitus` and move binaries to `/usr/bin`  
-```
-pi@raspberrypi:~ $ wget https://github.com/unitusdev/unitus/releases/download/0.14.2.2/unitus-0.14.2.2-armhf.tar.xz
-pi@raspberrypi:~ $ tar xf unitus-0.14.2.2-armhf.tar.xz
-pi@raspberrypi:~ $ chmod +x unitusd unitus-cli unitus-tx
-pi@raspberrypi:~ $ sudo mv unitusd unitus-cli unitus-tx /usr/bin
-```
-
-\# Clean up  
-`pi@raspberrypi:~ $ rm *`  
-
-\# Change directory to `/mnt/`  
-`pi@raspberrypi:~ $ cd /mnt/`
-
-\# Create a directory for Unitus Core  
-`pi@raspberrypi:/mnt $ mkdir unitus`  
-
-\# Change to the `unitus` directory  
-`pi@raspberrypi:/mnt $ cd unitus`  
-
-\# Create `unitus.conf` for Unitus Core   
-`pi@raspberrypi:/mnt/vertcoin $ nano unitus.conf`
-```  
-# merged mining values documentation
-# https://cdn.discordapp.com/attachments/370500771168518155/415547042807676929/Merged-Mining_Guide.pdf
-server=1
-rpcuser=unitusnode
-rpcpassword=yoursecurepasswordgoeshere
-rpcport=6699
-rpcallowip=127.0.0.1
-algo=lyra2re2
-
-# makes client run in background
-daemon=1
-
-# https://jlopp.github.io/bitcoin-core-config-generator/ lopp.net optimizations
-dbcache=100
-maxorphantx=10
-maxmempool=50
-maxconnections=15
-maxuploadtarget=5000
-```  
->The more connections, the faster your node is notified of new blocks and avoids wasting work, and the faster it can include transactions with fees in the coinbase, the faster it will propagate a P2Pool block minimizing chances it would become orphan. The less connections, the less bandwidth used and the lower the latency. `[4]`
-
-`ctrl+x` to save  
-
-`*OPTIONAL: A quick and easy way to generate a random password is taking the md5sum of a file`  
-```
-pi@raspberrypi:/mnt/unitus $ touch randomfilename
-pi@raspberrypi:/mnt/unitus $ md5sum randomfilename
-d41d8cd98f00b204e9800998ecf8427e  randomfilename
-
-# Clean up 
-pi@raspberrypi:/mnt/unitus $ rm randomfilename
-```   
-
-\# Change directory back home  
-```
-pi@raspberrypi:/mnt/unitus $ cd
-pi@raspberrypi:~ $ pwd
-/home/pi
-```  
- \# Create soft link (symbolic link) connecting `/mnt/unitus/` <---> `/home/pi/.unitus`  
-`pi@raspberrypi:~ $ sudo ln -s /mnt/unitus/ /home/pi/.unitus`  
-
-\# List all files in home  
-```
-pi@raspberrypi:~ $ ls -a
-.   .bash_history  .bashrc  db-4.8.30.NC         .nano     .selected_editor  .vertcoin
-..  .bash_logout   .config  db-4.8.30.NC.tar.gz  .profile  .unitus           .wget-hsts
-```  
-\# List files in `/home/pi/.unitus`, confirm our configuration file `unitus.conf` is there  
-```
-pi@raspberrypi:~ $ ls .unitus
-unitus.conf
-```  
-
-\# Transfer `Unitus` Blockchain to USB Flash Drive
-
-When `Unitus Core` is finished syncing to the blockchain, exit `Unitus Core` so that it safely shuts down ensuring no data is corrupted. 
-
-Proceed by running `WinSCP`, you will be met with a `Login` prompt asking for a Host name, Port number, User name and Password. Login to your Raspberry Pi like so, please note that your Raspberry Pi's `IP` address may be different than what is listed below.
-```
-File protocol: SFTP
-Host name: 192.168.1.2
-Port number: 22
-User name: pi
-Password: yourpasswordhere (default: raspberry)
-```
-
-`Default Windows Directory (Unitus): C:\Users\%USER%\AppData\Roaming\Unitus`  
-
-Transfer the folders `blocks` and `chainstate` to the `unitus` folder `/mnt/unitus/` on your USB Flash Drive. This will allow us to side-load the Unitus blockchain and bootstrap faster than if we had the Raspberry Pi do all the work. 
-
-\# Edit `crontab` file to start Unitus hourly and on reboot to ensure the process is alive  
-Here we will configure the crontab file to start vertcoind as a daemon on reboot and on each hour to ensure vertcoind always has a process thats alive. If vertcoind is already running when the hourly crontab executes it will simply fail to spawn a new process.
-
-\# Configure crontab file to start `unitusd` hourly and on reboot  
-`pi@raspberrypi:~ $ crontab -u pi -e`  
-```
-# Edit this file to introduce tasks to be run by cron.
-#
-# Each task to run has to be defined through a single line
-# indicating with different fields when the task will be run
-# and what command to run for the task
-#
-# To define the time you can provide concrete values for
-# minute (m), hour (h), day of month (dom), month (mon),
-# and day of week (dow) or use '*' in these fields (for 'any').#
-# Notice that tasks will be started based on the cron's system
-# daemon's notion of time and timezones.
-#
-# Output of the crontab jobs (including errors) is sent through
-# email to the user the crontab file belongs to (unless redirected).
-#
-# For example, you can run a backup of all your user accounts
-# at 5 a.m every week with:
-# 0 5 * * 1 tar -zcf /var/backups/home.tgz /home/
-#
-# For more information see the manual pages of crontab(5) and cron(8)
-#
-# m h  dom mon dow   command
-
-@reboot vertcoind
-@reboot unitusd
-
-# This is optional, this can cause for an annoying execution of a resource heavy 
-# application on load while troubleshooting an issue. Just be mindful that crontab
-# is setup this way if you choose to use it. Uncomment line to enable.
-#@hourly vertcoind
-#@hourly unitusd
-
-
-```
-`ctrl+x` to save
-
-\# Clean up  
-`pi@raspberrypi:~ $ sudo rm *` 
-
-\# `NOTE:` Make sure the blockchain has fully tansfered to `/mnt/unitus` before starting `unitusd`
-
-\# Start the `unitus` daemon and start blockchain sync  
-`pi@raspberrypi:~ $ unitusd &`  
-
-\# You can monitor resource usage with `htop`  
-`pi@raspberrypi:~ $ htop`  
-
-\# Monitor the `debug.log` of `unitusd` to troubleshoot the `unitusd` process if needed.  
-`pi@raspberrypi:~ $ tailf .unitus/debug.log`  
-
-`ctrl+c` to stop
-
-\# Configure firewall to allow `unitus` traffic  
-
-\# Escalate to `root` and configure `UFW`  
-`pi@raspberrypi:~ $ sudo su`  
-`root@raspberrypi:/home/pi# ufw allow 50603 comment 'allow unitus core'`  
-`root@raspberrypi:/home/pi# ufw enable`  
-`root@raspberrypi:/home/pi# ufw status`  
-  
-```
-Status: active
-
-To                         Action      From
---                         ------      ----
-22                         ALLOW       192.168.1.0/24             # allow SSH from local LAN
-5889                       ALLOW       Anywhere                   # allow vertcoin core
-50603                      ALLOW       Anywhere                   # allow unitus core
-5889 (v6)                  ALLOW       Anywhere (v6)              # allow vertcoin core
-50603 (v6)                 ALLOW       Anywhere (v6)              # allow unitus core
-```
-\# Give up `root`  
-`root@raspberrypi:/home/pi# exit`  
-
-Open a browser window and navigate to your router page, from there you can port forward your Raspberry Pi.  
-`TCP/UDP Port: 50603`  
-
-This will make your node public, supporting the health of the Unitus network by keeping it decentralized and populated with one more node.
-
-\# Launch `p2pool` with merged mining  
-`nohup python run_p2pool.py --net vertcoin -a yourvertcoinaddressgoeshere --merged http://unitusnode:yourreallysecureRPCpasswordhere@127.0.0.1:6699 &`
-
-`NOTE:` Wait until p2pool is caught up to about 1/3 of the shares on the p2pool network before trying to mine or you will recieve stratum timeouts. If the `unitusd` daemon is not fully synced you will not be able to properly merge mine.
-
-```
-pi@raspberrypi:~ $ unitus-cli getblockchaininfo
-{
-  "chain": "main",
-  "blocks": 1393285,
-  "headers": 1393285,
-  "bestblockhash": "9b4fcc8482e164e7a9a60b5f24ea1532662919634cd8dd9effeadd656b5bb24a",
-  "difficulty": 47777.40182882061,
-  "difficulty_lyra2re2": 47777.40182882061,
-  "difficulty_skein": 190247.1287273991,
-  "difficulty_argon2d": 0.06362806683689816,
-  "difficulty_yescrypt": 0.9089585153746931,
-  "difficulty_x11": 18000603.30642917,
-  "mediantime": 1525309320,
-  "verificationprogress": 0.9999996620202053,
-  "chainwork": "13b350000000000000000000000000000000000000000010d37b576f4191dc2a",
-  "pruned": false,
-  "softforks": [
-    {
-      "id": "bip34, bip65, bip66",
-      "version": 4,
-      "enforce": {
-        "status": false,
-        "found": 539,
-        "required": 850,
-        "window": 1000
-      },
-      "reject": {
-        "status": false,
-        "found": 539,
-        "required": 900,
-        "window": 1000
-      }
-    }
-  ],
-  "bip9_softforks": {
-  }
-}
-pi@raspberrypi:~ $ unitus-cli getconnectioncount
-14
-```
 
 ## References
 `[1] How to Create Your Own Bitcoin Full Node With a Raspberry Pi http://www.raspberrypifullnode.com/`  
