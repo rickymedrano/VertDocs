@@ -58,8 +58,13 @@ This step is `optional` but recommended. [Download](https://github.com/vertcoin-
 
 We will use this copy of the blockchain that is syncing to side-load onto our Raspberry Pi later.
 
-`Vertcoin Core Download Link: https://github.com/vertcoin-project/vertcoin-core/releases`  
+`Vertcoin Core Download Link: https://github.com/vertcoin-project/vertcoin-core/releases` 
+
+Where it is installed:
 `Default Windows Directory (Vertcoin): C:\Users\%USER%\AppData\Roaming\Vertcoin`  
+`Default Linux Directory (Vertcoin): \home\$USER\.vertcoin
+
+*Placeholder for future page on how to install Vertcoin Core Wallet on Linux and Windows*
 
 -----------------------------------------
 
@@ -120,24 +125,24 @@ Fail2ban Documentation: https://www.digitalocean.com/community/tutorials/how-fai
 ```
 1.) [8] Update					# update raspi-config script first
 2.) [1] Change User Password	# change password for current user
-3.) [4] Localization Options	#
+3.) [5] Localization Options	#
 	> [I2] Change Timezone		# set your timezone
-4.) [7] Advanced Options		#
+4.) [6] Advanced Options		#
 	> [A1] Expand Filesystem	# expand filesystem 
 ```
-`<Finish>` and choose to reboot.
+`<Finish>` 
+and choose to reboot with `sudo reboot`.
 
 \# Wait a minute, then log back in via `SSH`  
 `ssh 192.168.1.2 -l pi`  
 
-\# Change `root` password  
+\# Change `root` password to be able to configure firewall later
 `pi@raspberrypi:~ $ sudo passwd root`  
 ```
 # *OPTIONAL: DISABLE WIRELESS & BLUETOOTH
   
 # Create our blacklist file  
-pi@raspberrypi:~ $ cd /etc/modprobe.d/
-pi@raspberrypi:/etc/modprobe.d $ sudo nano raspi-blacklist.conf
+pi@raspberrypi:~ $ sudo nano /etc/modprobe.d/raspi-blacklist.conf
    
 # disable wireless
 blacklist brcmfmac
@@ -146,16 +151,28 @@ blacklist brcmutil
 # disable bluetooth
 blacklist btbcm
 blacklist hci_uart
-    
-ctrl+x to save
-    
-# Change directories back home    
-pi@raspberrypi:/etc/modprobe.d $ cd
-
-# NOTE: Changes will not take effect until after reboot.
 ```
+Hit Control + X, then y to confirm, then Enter to save
+
+\# Give the Pi a Static IP 
+Get your router IP address
+
+`sudo nano /etc/resolv.conf`
+
+Edit DHCP settings
+`sudo nano /etc/dhcpcd.conf`
+Scroll down and the example static ip configuration.
+Uncomment interface and leave it as eth0 if using ethernet, or wlan0 if using wireless
+Uncomment static ip_address and set the ip to your desired address
+Uncomment static routers and change it to your router IP
+The rest can be left alone.
+
+\# Reboot
+`sudo reboot`
+\# Navigate back to home directory
+`cd`
 \# Download latest stable version of vertcoin-core for `ARM` architecture to Raspberry Pi  
-`pi@raspberrypi:~ $ wget https://github.com/vertcoin-project/vertcoin-core/releases/download/0.17.1/vertcoin-qt-v0.17.1-arm-linux-gnueabihf.zip`  
+`pi@raspberrypi:~ $ wget https://github.com/vertcoin-project/vertcoin-core/releases/download/0.17.1/vertcoind-v0.17.1-arm-linux-gnueabihf.zip`  
 
 \# Unzip `vertcoin-qt-v0.17.1-arm-linux-gnueabihf.zip`  
 ```
@@ -179,11 +196,11 @@ Archive:  vertcoin-qt-v0.17.1-arm-linux-gnueabihf.zip
 
 Insert the USB Flash Drive into your Raspberry Pi.
 
-This USB Flash Drive will contain our Vertcoin data directory as well as our swap space file. We will give the Raspberry Pi some extra memory to work with we will ensure a swap file large enough to handle the memory demand to bootstrap the blockchain. 
+This USB Flash Drive will contain our Vertcoin data directory as well as our swap space file. We will give the Raspberry Pi some extra memory to work with to ensure a swap file large enough to handle the memory demand to bootstrap the blockchain. 
 
 It is worth mentioning that constantly writing data to the MicroSD card can be damaging, in this guide we will configure the swap file to reside off of the card.
 
-Please insert the USB Flash Drive into the Raspberry Pi. We will format the USB Flash Drive as an `ext4` filesystem, mount the USB Flash Drive to the Raspberry Pi and configure the device to auto-mount on reboot ensuring the blockchain stays accessible to the `Vertcoin` daemon after reboots.
+Insert the USB Flash Drive into the Raspberry Pi. We will format the USB Flash Drive as an `ext4` filesystem, mount the USB Flash Drive to the Raspberry Pi and configure the device to auto-mount on reboot ensuring the blockchain stays accessible to the `Vertcoin` daemon after reboots.
 
 \# Find your USB Flash Drive  
 ```
@@ -231,7 +248,7 @@ PARTUUID=efbdd15e-02  /               ext4    defaults,noatime  0       1
 # a swapfile is not a swap partition, no line here
 #   use  dphys-swapfile swap[on|off]  for that
 ```
-`ctrl+x` to save
+Save and exit file.
 
 \# Reboot to confirm auto-mount is successful  
 `pi@raspberrypi:~ $ sudo reboot`  
@@ -258,6 +275,20 @@ lost+found  vertcoin
 -----------------------------------------
 
 ### 6.) Transfer Blocks and verthash.dat to USB Flash Drive, Create `vertcoin.conf` & Soft Link to USB Flash Drive
+
+Next, we want to transfer certain Vertcoin Core files from our main computer to the Pi. 
+If you're using Linux on your main comoputer, can use the built in scp command in the terminal
+If you're using Windows on your main computer, you can use WinSCP
+
+*Add Linux Dropdown*
+
+Navigate to ./vertcoin
+`cd ~/.vertcoin
+scp peers.dat pi@192.168.1.22:/mnt/vertcoin
+scp -r blocks pi@192.168.1.22:/mnt/vertcoin
+scp verthash.dat pi@192.168.1.22:/mnt/vertcoin`
+
+*Add Windows Dropdown*
 
 >WinSCP (Windows Secure Copy) is a free and open-source SFTP, FTP, WebDAV, Amazon S3 and SCP client for Microsoft Windows. Its main function is secure file transfer between a local and a remote computer. Beyond this, WinSCP offers basic file manager and file synchronization functionality. For secure transfers, it uses Secure Shell (SSH) and supports the SCP protocol in addition to SFTP.
 
@@ -336,16 +367,6 @@ You can do the same by passing parameters to `P2Pool`:
 
 -----------------------------------------
 
-`*OPTIONAL: A quick and easy way to generate a random password is taking the md5sum of a file`
-```
-pi@raspberrypi:/mnt/vertcoin $ touch randomfilename
-pi@raspberrypi:/mnt/vertcoin $ md5sum randomfilename
-d41d8cd98f00b204e9800998ecf8427e  randomfilename
-
-# Clean up 
-pi@raspberrypi:~/.vertcoin $ rm randomfilename
-```   
-
 \# Change directory back home  
 ```
 pi@raspberrypi:/mnt/vertcoin $ cd
@@ -363,7 +384,7 @@ pi@raspberrypi:~ $ ls -a
 \# List files in `/home/pi/.vertcoin`, confirm blockchain and `vertcoin.conf` is there  
 ```
 pi@raspberrypi:~ $ ls .vertcoin
-blocks vertcoin.conf
+blocks peers.dat vertcoin.conf verthash.dat
 ```  
 
 -----------------------------------------
@@ -480,7 +501,7 @@ Choose 1-3 [2]: 2
 ```
 pi@raspberrypi:~ $ vertcoind
 [1] 837
-pi@raspberrypi:~ $ tailf .vertcoin/debug.log 
+pi@raspberrypi:~ $ tail -f .vertcoin/debug.log 
 2018-05-04 23:00:29 Cache configuration:
 2018-05-04 23:00:29 * Using 2.0MiB for block index database
 2018-05-04 23:00:29 * Using 8.0MiB for chain state database
@@ -495,6 +516,10 @@ pi@raspberrypi:~ $ tailf .vertcoin/debug.log
 2018-05-04 23:00:44 Verifying checkpoint at height 430000
 2018-05-04 23:00:47 Checking PoW for block 860000
 ```
+If in the log it shows an abort, you might need to reindex. Run:
+`vertcoindd -reindex`
+and rerun:
+`tail -f .vertcoin/debug.log` to verify its running and syncing.
 
 ### Quick note about blockchain syncing
     Vertcoin Core is now synchronizing to the side-loaded blockchain located in `/mnt/` 
@@ -507,7 +532,7 @@ pi@raspberrypi:~ $ tailf .vertcoin/debug.log
     vertcoind by issuing the following commands: 
     
     # Display output of Vertcoin debug.log; ctrl+c to stop  
-    pi@raspberrypi:~ $ tailf .vertcoin/debug.log
+    pi@raspberrypi:~ $ tail -f .vertcoin/debug.log
     
     # Show blockchain information  
     pi@raspberrypi:~ $ vertcoin-cli getblockchaininfo
@@ -802,7 +827,7 @@ python run_p2pool.py --net vertcoin -a yourvertcoinaddressgoeshere --max-conns 8
 `pi@raspberrypi:~ $ ./start-p2pool.sh | at now`
 
 \# Display output of P2Pool's `debug` log; `ctrl+c` to stop
-`pi@raspberrypi:~ $ tailf p2pool-vtc-3.0.0/data/vertcoin/log`
+`pi@raspberrypi:~ $ tail -f p2pool-vtc-3.0.0/data/vertcoin/log`
 
 -----------------------------------------
 
